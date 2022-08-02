@@ -109,7 +109,7 @@ function load_mailbox(mailbox) {
       mailItem.append(boldThisHTML(`To: ${element.recipients}`));
       }
       else{
-      mailItem.append(boldThisHTML(`From: ${element.recipients}`));
+      mailItem.append(boldThisHTML(`From: ${element.sender}`));
       }
       mailItem.append(` ${element.subject}`);
       mailItem.append(leftAlignedText);
