@@ -1,15 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-
+  
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
   document.querySelector('#compose-form').onsubmit= send_email;  
-
+  
   // By default, load the inbox
   load_mailbox('inbox');
 });
+//helper functions to make other code a bit easier to read.
+function boldThisHTML(str){
+  const bolded = document.createElement('b')
+  bolded.innerHTML = str;
+  return bolded;
+}
+
+function line_break(){
+  return document.createElement('br');
+}
 
 function send_email(){
   const recipients1 = document.querySelector('#compose-recipients').value;
@@ -68,36 +78,56 @@ function load_mailbox(mailbox) {
   // Show the mailbox name
   // Also clears the content entirely of emails-view
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
-
+  let counter = 0;
   fetch(`emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
     //console.log(emails);
+    
     emails.forEach(element => {
+      counter++; 
       const mailItem = document.createElement('div');
       mailItem.addEventListener('mouseover',()=>{  
-      mailItem.style.border = '4px solid grey';
+      mailItem.style.border = '4px solid #0000FF';
       mailItem.style.fontSize = '120%';
+      mailItem.style.backgroundColor = '#f4ee97';
       })
       mailItem.addEventListener('mouseleave',()=>{
-        //if(element.read){mailItem.style.backgroundColor = 'grey';}
-        //else{ mailItem.style.backgroundColor = '';
+        if(element.read){mailItem.style.backgroundColor = '#CDCDCD';}
+        else{ mailItem.style.backgroundColor = '#FFFFFF';}
       mailItem.style.border= '1px solid black';
       mailItem.style.fontSize = '100%';
       });
       mailItem.addEventListener('click',()=>load_email(element.id,mailbox));
-      mailItem.className = "sent-mail";
-      mailItem.innerHTML = `${element.sender} to ${element.recipients}. Subject: ${element.subject}. Date: ${element.timestamp}`
+      mailItem.className = "mail";
+
       
+      const leftAlignedText = document.createElement('span');
+      leftAlignedText.style.float = 'right';
+      leftAlignedText.append(`${element.timestamp}`);
+      if(mailbox === 'sent'){
+      mailItem.append(boldThisHTML(`To: ${element.recipients}`));
+      }
+      else{
+      mailItem.append(boldThisHTML(`From: ${element.recipients}`));
+      }
+      mailItem.append(` ${element.subject}`);
+      mailItem.append(leftAlignedText);
       mailItem.style.border = '1px solid black';
       if(element.read){mailItem.style.backgroundColor = '#CDCDCD';}
 
       document.querySelector('#emails-view').append(mailItem);
     });
     
-  });
+    if (counter === 0){
+      document.querySelector('#emails-view').append('\n No Mail')
+    }  
+  }
+  )
+  
 
 }
+
 
 
 function load_email(mailid,mailbox){
@@ -120,7 +150,7 @@ function load_email(mailid,mailbox){
     replyButton.innerHTML= "Reply";
     replyButton.addEventListener('click',() => compose_reply(email));
     const archiveButton = document.createElement('button');
-    //archived or not logic
+    //archived or not logic, this isn't necessary as the page is changed anyway but this way the button will change state on the page aswell
     isArchived = email.archived;
     if(mailbox != 'sent'){
       if(isArchived){
@@ -145,6 +175,7 @@ function load_email(mailid,mailbox){
           else{
             archiveButton.innerHTML = "Archive"
           }
+          load_mailbox('inbox');
         })
       })
     }
@@ -186,16 +217,5 @@ function load_email(mailid,mailbox){
   })
   );
 
-  //helper functions to make other code a bit easier to read.
-  function boldThisHTML(str){
-    const bolded = document.createElement('b')
-    bolded.innerHTML = str;
-    return bolded;
-  }
-  
-  function line_break(){
-    return document.createElement('br');
-  }
-  
   
 }
